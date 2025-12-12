@@ -1,4 +1,4 @@
-# backend/main.py
+
 import os
 import tempfile
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
@@ -8,7 +8,7 @@ import speech_recognition as sr
 from googletrans import Translator
 import logging
 
-# Setup logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for React frontend
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -27,10 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize translator
 translator = Translator()
 
-# Health check endpoint
+
 @app.get("/")
 async def root():
     return {
@@ -46,16 +45,16 @@ async def root():
         "supported_audio_formats": ["wav", "mp3", "m4a", "webm", "ogg", "flac"]
     }
 
-# Health check
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "voice-translator"}
 
-# Get available languages
+
 @app.get("/languages")
 async def get_languages():
     languages = [
-        # Global Languages
+        
         {"code": "en", "name": "English", "flag": "🇺🇸"},
         {"code": "es", "name": "Spanish", "flag": "🇪🇸"},
         {"code": "fr", "name": "French", "flag": "🇫🇷"},
@@ -67,7 +66,7 @@ async def get_languages():
         {"code": "ko", "name": "Korean", "flag": "🇰🇷"},
         {"code": "zh-cn", "name": "Chinese", "flag": "🇨🇳"},
         
-        # Indian Languages
+       
         {"code": "hi", "name": "Hindi", "flag": "🇮🇳"},
         {"code": "ta", "name": "Tamil", "flag": "🇮🇳"},
         {"code": "te", "name": "Telugu", "flag": "🇮🇳"},
@@ -79,7 +78,7 @@ async def get_languages():
         {"code": "pa", "name": "Punjabi", "flag": "🇮🇳"},
         {"code": "or", "name": "Odia", "flag": "🇮🇳"},
         
-        # Other Languages
+       
         {"code": "ar", "name": "Arabic", "flag": "🇸🇦"},
         {"code": "tr", "name": "Turkish", "flag": "🇹🇷"},
         {"code": "nl", "name": "Dutch", "flag": "🇳🇱"},
@@ -96,7 +95,7 @@ async def get_languages():
     ]
     return {"languages": languages}
 
-# Translate audio file
+
 @app.post("/translate/voice")
 async def translate_voice(
     audio: UploadFile = File(..., description="Audio file to translate"),
@@ -105,7 +104,7 @@ async def translate_voice(
     logger.info(f"Processing audio file: {audio.filename}, target language: {target_language}")
     
     try:
-        # Validate file type
+        
         if not audio.content_type or not audio.content_type.startswith('audio/'):
             return JSONResponse(
                 status_code=400,
@@ -115,7 +114,6 @@ async def translate_voice(
                 }
             )
         
-        # Check file extension
         filename = audio.filename.lower()
         valid_extensions = ['.wav', '.mp3', '.m4a', '.webm', '.ogg', '.flac', '.aac', '.amr']
         
@@ -128,18 +126,17 @@ async def translate_voice(
                     "error": f"Unsupported file format: {file_extension}. Supported formats: {', '.join(valid_extensions)}"
                 }
             )
-        
-        # Check file size (limit to 10MB)
+       
         file_size = 0
         temp_file_path = None
         
         try:
-            # Save uploaded file temporarily
+           
             with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp:
                 content = await audio.read()
                 file_size = len(content)
                 
-                # Check size limit (10MB)
+                
                 if file_size > 10 * 1024 * 1024:
                     return JSONResponse(
                         status_code=400,
@@ -151,27 +148,26 @@ async def translate_voice(
                 
                 tmp.write(content)
                 temp_file_path = tmp.name
-            
-            # Initialize speech recognizer
+           
             recognizer = sr.Recognizer()
             text = ""
             
             try:
-                # Process audio file
+              
                 with sr.AudioFile(temp_file_path) as source:
-                    # Adjust for ambient noise
+                    
                     logger.info("Adjusting for ambient noise...")
                     recognizer.adjust_for_ambient_noise(source, duration=0.5)
                     
-                    # Record the audio
+                   
                     logger.info("Recording audio...")
                     audio_data = recognizer.record(source)
                     
-                    # Recognize speech using Google Web Speech API
+                 
                     logger.info("Converting speech to text...")
                     text = recognizer.recognize_google(
                         audio_data, 
-                        language='auto'  # Auto-detect language
+                        language='auto'  
                     )
                     
                     logger.info(f"Recognized text: {text}")
@@ -202,12 +198,12 @@ async def translate_voice(
                     }
                 )
             
-            # Translate text
+           
             try:
                 logger.info(f"Translating text to {target_language}...")
                 translation = translator.translate(text, dest=target_language)
                 
-                # Log translation info
+               
                 logger.info(f"Translation complete. Source: {translation.src}, Target: {target_language}")
                 
                 return {
@@ -236,7 +232,7 @@ async def translate_voice(
                 )
                 
         finally:
-            # Clean up temp file
+           
             if temp_file_path and os.path.exists(temp_file_path):
                 try:
                     os.unlink(temp_file_path)
@@ -254,7 +250,7 @@ async def translate_voice(
             }
         )
 
-# Translate text
+
 @app.post("/translate/text")
 async def translate_text(
     text: str = Form(..., description="Text to translate"),
@@ -263,7 +259,7 @@ async def translate_text(
     logger.info(f"Translating text: '{text[:50]}...' to {target_language}")
     
     try:
-        # Validate input
+      
         if not text or not text.strip():
             return JSONResponse(
                 status_code=400,
@@ -282,7 +278,7 @@ async def translate_text(
                 }
             )
         
-        # Translate text
+      
         translation = translator.translate(text, dest=target_language)
         
         return {
@@ -305,7 +301,7 @@ async def translate_text(
             }
         )
 
-# Test endpoint for file upload
+
 @app.post("/test/upload")
 async def test_upload(audio: UploadFile = File(...)):
     """Test endpoint to check file upload functionality"""
@@ -315,7 +311,7 @@ async def test_upload(audio: UploadFile = File(...)):
         "size": len(await audio.read())
     }
 
-# Error handlers
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     return JSONResponse(
@@ -337,7 +333,7 @@ async def general_exception_handler(request, exc):
         }
     )
 
-# Run the app
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

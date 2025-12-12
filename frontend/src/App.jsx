@@ -1,4 +1,4 @@
-// frontend/src/App.jsx
+
 import React, { useState, useRef } from 'react'; // ADD useRef here
 import VoiceRecorder from './components/VoiceRecorder';
 import './App.css';
@@ -78,7 +78,7 @@ function App() {
     const file = event.target.files[0];
     if (!file) return;
     
-    // Check if it's an audio file
+    
     if (!file.type.startsWith('audio/')) {
       setError('Please select an audio file (MP3, WAV, etc.)');
       return;
@@ -109,7 +109,7 @@ function App() {
       setError('Connection error: ' + err.message);
     } finally {
       setLoading(false);
-      // Reset file input
+    
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -246,7 +246,7 @@ function App() {
   );
 }
 
-// Helper function to get language name from code
+
 function getLanguageName(code) {
   const languages = {
        'en': 'English',
@@ -260,7 +260,7 @@ function getLanguageName(code) {
     'ko': 'Korean',
     'zh-cn': 'Chinese',
     
-    // Indian Languages
+  
     'hi': 'Hindi',
     'ta': 'Tamil',
     'te': 'Telugu',
